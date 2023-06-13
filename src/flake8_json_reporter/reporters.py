@@ -1,8 +1,24 @@
 """Module containing all of the JSON reporters for Flake8."""
 import hashlib
 import json
+import textwrap
 
 from flake8.formatting import base
+
+
+def dictionary_from(violation):
+    """Convert a Violation to a dictionary."""
+    return {
+        key: getattr(violation, key)
+        for key in [
+            "code",
+            "filename",
+            "line_number",
+            "column_number",
+            "text",
+            "physical_line",
+        ]
+    }
 
 
 class DefaultJSON(base.BaseFormatter):
@@ -46,27 +62,69 @@ class DefaultJSON(base.BaseFormatter):
         self.files_reported_count += 1
         self.write_line("]")
 
-    def dictionary_from(self, violation):
-        """Convert a Violation to a dictionary."""
-        return {
-            key: getattr(violation, key)
-            for key in [
-                "code",
-                "filename",
-                "line_number",
-                "column_number",
-                "text",
-                "physical_line",
-            ]
-        }
-
     def format(self, violation):
         """Format a violation."""
-        formatted = json.dumps(self.dictionary_from(violation))
+        formatted = json.dumps(dictionary_from(violation))
         if self.reported_errors_count > 0:
             self.write_line(f", {formatted}")
         else:
             self.write_line(formatted)
+        self.reported_errors_count += 1
+
+
+def _indent(text, indent):
+    return textwrap.indent(text, " " * indent)
+
+
+class FormattedJSON(base.BaseFormatter):
+    """Pretty-printing JSON formatter."""
+
+    def after_init(self):
+        """Force newline to be empty."""
+        self.newline = ""
+
+    def write_line(self, line):
+        """Override write for convenience."""
+        self.write(line, None)
+
+    def start(self):
+        """Override the default to start printing JSON."""
+        super().start()
+        self.write_line("{")
+        self.files_reported_count = 0
+
+    def stop(self):
+        """Override the default to finish printing JSON."""
+        if self.files_reported_count > 0:
+            self.write_line("\n")
+        self.write_line("}\n")
+
+    def beginning(self, filename):
+        """We're starting a new file."""
+        if self.files_reported_count > 0:
+            self.write_line(",\n")
+            self.write_line(f"  {json.dumps(filename)}: [")
+        else:
+            self.write_line(f"\n  {json.dumps(filename)}: [")
+        self.reported_errors_count = 0
+
+    def finished(self, filename):
+        """We've finished processing a file."""
+        self.files_reported_count += 1
+        if self.reported_errors_count > 0:
+            self.write_line("\n")
+            self.write_line("  ]")
+        else:
+            self.write_line("]")
+
+    def format(self, violation):
+        """Format a violation."""
+        formatted = json.dumps(dictionary_from(violation), indent=2)
+        formatted = _indent(formatted, indent=4)
+        if self.reported_errors_count > 0:
+            self.write_line(",")
+        self.write_line("\n")
+        self.write_line(formatted)
         self.reported_errors_count += 1
 
 
