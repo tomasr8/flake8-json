@@ -1,0 +1,29 @@
+{
+  "main.py": [],
+  "__init__.py": [
+    {
+      "code": "XXX01",
+      "filename": "main.py",
+      "line_number": 42,
+      "column_number": 80,
+      "text": "    print(\"Hello, world!\")",
+      "physical_line": 42
+    },
+    {
+      "code": "XXX01",
+      "filename": "main.py",
+      "line_number": 42,
+      "column_number": 80,
+      "text": "    print(\"Hello, world!\")",
+      "physical_line": 42
+    },
+    {
+      "code": "XXX01",
+      "filename": "main.py",
+      "line_number": 42,
+      "column_number": 80,
+      "text": "    print(\"Hello, world!\")",
+      "physical_line": 42
+    }
+  ]
+}
